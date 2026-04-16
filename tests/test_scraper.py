@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, patch
 
 
 def make_entry(title, link, summary, hours_ago=1):
-    t = datetime.datetime.utcnow() - datetime.timedelta(hours=hours_ago)
+    t = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(hours=hours_ago)
     entry = MagicMock()
     entry.title = title
     entry.link = link

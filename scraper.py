@@ -2,6 +2,7 @@ import feedparser
 import httpx
 from bs4 import BeautifulSoup
 import datetime
+from urllib.parse import urljoin
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import List, Dict, Optional
 
@@ -17,6 +18,10 @@ def _is_fresh(entry) -> bool:
     if not published:
         return True  # unknown time — include it
     pub_dt = datetime.datetime(*published[:6], tzinfo=datetime.timezone.utc)
+    # Note: feedparser normalises most feeds to UTC, but naive timestamps
+    # from feeds that omit timezone are assumed UTC here. This is acceptable
+    # for the sources in use but may cause slight freshness drift for
+    # non-UTC feeds.
     cutoff = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(hours=FRESHNESS_HOURS)
     return pub_dt >= cutoff
 
@@ -26,6 +31,7 @@ def _scrape_html(source: dict) -> List[Dict]:
     try:
         headers = {"User-Agent": "Mozilla/5.0 (compatible; TechAlertBot/1.0)"}
         resp = httpx.get(source["url"], headers=headers, timeout=10, follow_redirects=True)
+        resp.raise_for_status()
         soup = BeautifulSoup(resp.text, "html.parser")
         articles = []
         for tag in soup.find_all(["h2", "h3"], limit=20):
@@ -33,9 +39,7 @@ def _scrape_html(source: dict) -> List[Dict]:
             if not a:
                 continue
             title = a.get_text(strip=True)
-            href = a["href"]
-            if href.startswith("/"):
-                href = source["url"].rstrip("/") + href
+            href = urljoin(source["url"], a["href"])
             if title:
                 articles.append({
                     "title": title,

@@ -47,4 +47,4 @@ TWITTER_QUERIES = [
 FRESHNESS_HOURS = 13
 
 # Claude model to use
-CLAUDE_MODEL = "claude-sonnet-4-6"
+CLAUDE_MODEL = "claude-3-5-sonnet-20241022"

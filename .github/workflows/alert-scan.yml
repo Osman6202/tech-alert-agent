@@ -18,6 +18,7 @@ jobs:
       - name: Install dependencies
         run: |
           pip install -r requirements.txt
+          pip install sgmllib3k
           sudo apt-get install -y libasound2t64 2>/dev/null || true
           playwright install --with-deps chromium
 

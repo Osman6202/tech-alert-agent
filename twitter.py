@@ -1,5 +1,4 @@
-from playwright.sync_api import sync_playwright, Page
-from typing import List, Dict
+from typing import List, Dict, Any
 import re
 
 from logger import get_logger
@@ -10,7 +9,7 @@ logger = get_logger(__name__)
 RESULTS_PER_QUERY = 20
 
 
-def scrape_nitter_query(query: str, instance: str, page: Page) -> List[Dict]:
+def scrape_nitter_query(query: str, instance: str, page: Any) -> List[Dict]:
     """Scrape a search query from a single Nitter instance."""
     encoded = query.replace(" ", "+").replace("(", "%28").replace(")", "%29")
     url = f"{instance}/search?q={encoded}&f=tweets"
@@ -47,6 +46,7 @@ def fetch_twitter() -> List[Dict]:
     """
     all_tweets = []
     try:
+        from playwright.sync_api import sync_playwright
         with sync_playwright() as p:
             browser = p.chromium.launch(headless=True)
             context = browser.new_context(user_agent="Mozilla/5.0 (X11; Linux x86_64)")

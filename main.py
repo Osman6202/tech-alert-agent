@@ -26,9 +26,10 @@ def run_full() -> None:
     all_items = articles + tweets
     logger.info(f"Total items collected: {len(all_items)}")
 
-    categorized = categorize_items(all_items)
-    if categorized is None:
-        send_message("⚠️ Tech Alert: Categorization failed. Check logs.")
+    try:
+        categorized = categorize_items(all_items)
+    except Exception as e:
+        send_message(f"⚠️ Tech Alert: Categorization failed — {type(e).__name__}: {e}")
         return
 
     mode = _briefing_mode()
@@ -44,9 +45,10 @@ def run_alert() -> None:
     tweets = fetch_twitter()
     all_items = articles + tweets
 
-    categorized = categorize_items(all_items)
-    if categorized is None:
-        logger.error("Alert scan: categorization failed")
+    try:
+        categorized = categorize_items(all_items)
+    except Exception as e:
+        logger.error(f"Alert scan: categorization failed — {type(e).__name__}: {e}")
         return
 
     if not has_high_alerts(categorized):

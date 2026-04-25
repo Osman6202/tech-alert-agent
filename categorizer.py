@@ -72,8 +72,8 @@ def categorize_items(items: List[Dict]) -> Optional[Dict]:
         )
         return result
     except Exception as e:
-        logger.error(f"Categorization failed: {e}")
-        return None
+        logger.error(f"Categorization failed: {e}", exc_info=True)
+        raise
 
 
 def has_high_alerts(categorized: Dict) -> bool:

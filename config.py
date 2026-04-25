@@ -3,9 +3,12 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-ANTHROPIC_API_KEY = os.environ["ANTHROPIC_API_KEY"]
 TELEGRAM_BOT_TOKEN = os.environ["TELEGRAM_BOT_TOKEN"]
-TELEGRAM_CHAT_ID = os.environ["TELEGRAM_CHAT_ID"]
+TELEGRAM_CHAT_ID   = os.environ["TELEGRAM_CHAT_ID"]
+
+# LM Studio local server (OpenAI-compatible REST API)
+LM_STUDIO_HOST  = os.environ.get("LM_STUDIO_HOST",  "http://localhost:1234/v1")
+LM_STUDIO_MODEL = os.environ.get("LM_STUDIO_MODEL", "phi-3.5-mini-instruct")
 
 # RSS sources
 NEWS_SOURCES = [
@@ -46,5 +49,3 @@ TWITTER_QUERIES = [
 # Hours window for article freshness filter
 FRESHNESS_HOURS = 13
 
-# Claude model to use
-CLAUDE_MODEL = "claude-sonnet-4-6"

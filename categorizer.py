@@ -1,9 +1,9 @@
 import json
 from typing import List, Dict, Optional
-from anthropic import Anthropic
+from openai import OpenAI
 
 from logger import get_logger
-from config import ANTHROPIC_API_KEY, CLAUDE_MODEL
+from config import LM_STUDIO_HOST, LM_STUDIO_MODEL
 
 logger = get_logger(__name__)
 
@@ -38,7 +38,7 @@ News items to categorize:
 
 
 def categorize_items(items: List[Dict]) -> Optional[Dict]:
-    """Send items to Claude for categorization. Returns categorized dict or None on error."""
+    """Send items to LM Studio for categorization. Returns categorized dict or raises on error."""
     if not items:
         return {
             "high_alerts": [], "ai": [], "cybersecurity": [],
@@ -46,19 +46,22 @@ def categorize_items(items: List[Dict]) -> Optional[Dict]:
             "quick_insight": "No news items found for this period."
         }
     try:
-        client = Anthropic(api_key=ANTHROPIC_API_KEY)
+        client = OpenAI(base_url=LM_STUDIO_HOST, api_key="lm-studio")
         items_json = json.dumps(
             [{"title": i["title"], "url": i["url"], "summary": i["summary"], "source": i["source"]}
              for i in items],
             indent=2
         )
-        response = client.messages.create(
-            model=CLAUDE_MODEL,
-            max_tokens=4096,
-            system=SYSTEM_PROMPT,
-            messages=[{"role": "user", "content": CATEGORY_PROMPT.format(items=items_json)}],
+        response = client.chat.completions.create(
+            model=LM_STUDIO_MODEL,
+            max_tokens=1024,
+            temperature=0.1,
+            messages=[
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "user",   "content": CATEGORY_PROMPT.format(items=items_json)},
+            ],
         )
-        raw = response.content[0].text.strip()
+        raw = response.choices[0].message.content.strip()
         if raw.startswith("```"):
             raw = raw.split("```")[1]
             if raw.startswith("json"):

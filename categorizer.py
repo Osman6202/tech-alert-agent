@@ -1,4 +1,3 @@
-import os
 import json
 from typing import List, Dict, Optional
 from openai import OpenAI
@@ -61,7 +60,7 @@ def _parse_raw(raw: str) -> dict:
 
 
 def _categorize_via_lm_studio(messages: list) -> dict:
-    client = OpenAI(base_url=LM_STUDIO_HOST, api_key="lm-studio")
+    client   = OpenAI(base_url=LM_STUDIO_HOST, api_key="lm-studio")
     response = client.chat.completions.create(
         model=LM_STUDIO_MODEL,
         max_tokens=1024,
@@ -71,22 +70,8 @@ def _categorize_via_lm_studio(messages: list) -> dict:
     return _parse_raw(response.choices[0].message.content)
 
 
-def _categorize_via_anthropic(messages: list) -> dict:
-    import anthropic
-    client = anthropic.Anthropic()
-    system = next(m["content"] for m in messages if m["role"] == "system")
-    user_msgs = [m for m in messages if m["role"] != "system"]
-    response = client.messages.create(
-        model="claude-haiku-4-5-20251001",
-        max_tokens=1024,
-        system=system,
-        messages=user_msgs,
-    )
-    return _parse_raw(response.content[0].text)
-
-
 def categorize_items(items: List[Dict]) -> Optional[Dict]:
-    """Send items to LM Studio for categorization, falling back to Anthropic API if unavailable."""
+    """Send items to LM Studio for categorization. Raises on failure."""
     if not items:
         return _EMPTY
 
@@ -99,18 +84,9 @@ def categorize_items(items: List[Dict]) -> Optional[Dict]:
 
     try:
         result = _categorize_via_lm_studio(messages)
-    except Exception as lm_err:
-        api_key = os.environ.get("ANTHROPIC_API_KEY")
-        if api_key:
-            logger.warning(f"LM Studio unavailable ({lm_err}) — falling back to Anthropic API")
-            try:
-                result = _categorize_via_anthropic(messages)
-            except Exception as e:
-                logger.error(f"Anthropic fallback also failed: {e}", exc_info=True)
-                raise
-        else:
-            logger.error(f"Categorization failed: {lm_err}", exc_info=True)
-            raise
+    except Exception as e:
+        logger.error(f"LM Studio categorization failed: {e}", exc_info=True)
+        raise
 
     logger.info(
         f"Categorized {len(items)} items — "
@@ -122,5 +98,4 @@ def categorize_items(items: List[Dict]) -> Optional[Dict]:
 
 
 def has_high_alerts(categorized: Dict) -> bool:
-    """Return True if categorized result contains any HIGH ALERT items."""
     return bool(categorized.get("high_alerts"))

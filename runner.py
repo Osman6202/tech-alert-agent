@@ -13,16 +13,15 @@ logger = get_logger(__name__)
 
 
 def _briefing_mode() -> str:
-    """Return 'morning' or 'evening' based on current MYT hour."""
     myt_hour = (datetime.datetime.now(datetime.timezone.utc).hour + 8) % 24
     return "morning" if myt_hour < 14 else "evening"
 
 
 def run_full() -> None:
-    """Scrape everything, categorize, send full briefing."""
+    """Scrape all sources, categorize, send full Telegram briefing."""
     logger.info("Starting FULL briefing run")
     articles = fetch_all_sources()
-    tweets = fetch_twitter()
+    tweets   = fetch_twitter()
     all_items = articles + tweets
     logger.info(f"Total items collected: {len(all_items)}")
 
@@ -32,17 +31,17 @@ def run_full() -> None:
         send_message(f"⚠️ Tech Alert: Categorization failed — {type(e).__name__}: {e}")
         return
 
-    mode = _briefing_mode()
+    mode  = _briefing_mode()
     parts = format_full_briefing(categorized, mode=mode)
     send_messages(parts)
     logger.info("FULL briefing sent")
 
 
 def run_alert() -> None:
-    """Scrape everything, send only if HIGH ALERT found and not already sent."""
+    """Scrape all sources, send to Telegram only if unseen HIGH ALERTs found."""
     logger.info("Starting ALERT scan")
-    articles = fetch_all_sources()
-    tweets = fetch_twitter()
+    articles  = fetch_all_sources()
+    tweets    = fetch_twitter()
     all_items = articles + tweets
 
     try:
@@ -60,23 +59,20 @@ def run_alert() -> None:
         if is_already_sent(url):
             logger.info(f"Alert already sent: {alert['title']}")
             continue
-        msg = format_alert_message(alert)
+        msg  = format_alert_message(alert)
         sent = send_message(msg)
         if sent:
             mark_sent(url)
             logger.info(f"HIGH ALERT sent: {alert['title']}")
 
 
-def main() -> None:
-    parser = argparse.ArgumentParser(description="Tech Alert Agent")
+# Keep CLI entry point so bot_listener.py subprocess calls still work:
+#   python runner.py --mode full
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Tech Alert Runner")
     parser.add_argument("--mode", choices=["full", "alert"], required=True)
     args = parser.parse_args()
-
     if args.mode == "full":
         run_full()
-    elif args.mode == "alert":
+    else:
         run_alert()
-
-
-if __name__ == "__main__":
-    main()

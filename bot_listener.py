@@ -10,7 +10,7 @@ from config import TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID
 logger = get_logger(__name__)
 
 PYTHON = sys.executable
-MAIN_SCRIPT = os.path.join(os.path.dirname(__file__), "main.py")
+MAIN_SCRIPT = os.path.join(os.path.dirname(__file__), "runner.py")
 AUTHORIZED_CHAT_ID = str(TELEGRAM_CHAT_ID)
 
 

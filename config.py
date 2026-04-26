@@ -10,6 +10,9 @@ TELEGRAM_CHAT_ID   = os.environ["TELEGRAM_CHAT_ID"]
 LM_STUDIO_HOST  = os.environ.get("LM_STUDIO_HOST",  "http://localhost:1234/v1")
 LM_STUDIO_MODEL = os.environ.get("LM_STUDIO_MODEL", "phi-3.5-mini-instruct")
 
+# Scheduler timezone — briefings fire at 08:00 and 20:00 in this zone
+SCHEDULE_TZ = os.environ.get("SCHEDULE_TZ", "Asia/Kuala_Lumpur")
+
 # RSS sources
 NEWS_SOURCES = [
     {"name": "Reuters Technology",    "url": "https://feeds.reuters.com/reuters/technologyNews"},
@@ -49,3 +52,12 @@ TWITTER_QUERIES = [
 # Hours window for article freshness filter
 FRESHNESS_HOURS = 13
 
+
+def validate_config() -> list[str]:
+    """Return list of warning strings for missing/placeholder config values."""
+    warnings = []
+    if "your_telegram" in TELEGRAM_BOT_TOKEN.lower():
+        warnings.append("TELEGRAM_BOT_TOKEN is still the placeholder — edit .env")
+    if "your_telegram" in str(TELEGRAM_CHAT_ID).lower():
+        warnings.append("TELEGRAM_CHAT_ID is still the placeholder — edit .env")
+    return warnings

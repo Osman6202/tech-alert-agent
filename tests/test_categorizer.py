@@ -36,27 +36,11 @@ def test_categorize_items_returns_all_categories():
     assert result["quick_insight"] == "AI model releases are accelerating in 2026"
 
 
-def test_categorize_falls_back_to_anthropic_when_lm_studio_fails():
-    mock_resp = MagicMock()
-    mock_resp.choices[0].message.content = json.dumps(SAMPLE_RESPONSE)
-    with patch("categorizer.OpenAI") as MockOpenAI, \
-         patch("categorizer._categorize_via_anthropic") as mock_anthropic, \
-         patch.dict("os.environ", {"ANTHROPIC_API_KEY": "test-key"}):
-        MockOpenAI.return_value.chat.completions.create.side_effect = Exception("Connection refused")
-        mock_anthropic.return_value = SAMPLE_RESPONSE
-        from categorizer import categorize_items
-        result = categorize_items(SAMPLE_ITEMS)
-
-    assert mock_anthropic.called
-    assert "high_alerts" in result
-
-
-def test_categorize_raises_when_no_fallback_available():
-    with patch("categorizer.OpenAI") as MockOpenAI, \
-         patch.dict("os.environ", {"ANTHROPIC_API_KEY": ""}):
+def test_categorize_raises_on_lm_studio_failure():
+    with patch("categorizer.OpenAI") as MockOpenAI:
         MockOpenAI.return_value.chat.completions.create.side_effect = Exception("Connection refused")
         from categorizer import categorize_items
-        with pytest.raises(Exception):
+        with pytest.raises(Exception, match="Connection refused"):
             categorize_items(SAMPLE_ITEMS)
 
 
